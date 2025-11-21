@@ -123,3 +123,105 @@ public class PrtPosition : MonoBehaviour
         }
     }
 }
+```
+
+---
+# 🎮 주요 스크립트 및 게임 메커니즘
+
+## BallMove.cs — 오브젝트 이동
+transform.Translate(Vector3.forward * Time.deltaTime * 5f);
+
+## RadiusChange.cs — 충돌체 크기 변경
+GetComponent<SphereCollider>().radius = 2f;
+
+## 🎥 CameraFollow.cs — 카메라 따라가기
+public Transform target;
+public Vector3 offset;
+
+void LateUpdate()
+{
+    transform.position = target.position + offset;
+}
+
+## 🎮 입력 및 이동
+### GroundMove.cs — 회전
+float h = Input.GetAxis("Horizontal");
+transform.Rotate(0, h * 100f * Time.deltaTime, 0);
+
+### BallJump.cs — 점프
+if (Input.GetKeyDown(KeyCode.Space))
+{
+    rb.AddForce(Vector3.up * 300f);
+}
+
+## 🚧 ObstacleMove.cs — 장애물 이동
+public float speed = 3f;
+
+void Update()
+{
+    transform.Translate(Vector3.left * speed * Time.deltaTime);
+}
+
+### 충돌 시 반대 방향으로 튕기기
+void OnCollisionEnter(Collision col)
+{
+    rb.AddForce(Vector3.back * 200f);
+}
+
+## 🕹 게임 시스템 구현
+### 🧠 GameManager 기능
+- 공이 추락하면 게임 재시작
+- 코인 획득 시 점수 증가
+- 게임 전체 흐름 관리
+
+### 🪙 CoinTrigger.cs — 코인 획득
+void OnTriggerEnter(Collider other)
+{
+    if (other.CompareTag("Player"))
+    {
+        GameManager.instance.AddCoin();
+        Destroy(gameObject);
+    }
+}
+
+### RedCoinItem.cs — 장애물 전체 제거
+GameObject[] obs = GameObject.FindGameObjectsWithTag("Obstacle");
+
+foreach (var o in obs)
+{
+    Destroy(o);
+}
+
+## 🪨 투사체 시스템
+### Shooter.cs — 돌 발사
+public GameObject stonePrefab;
+public float interval = 2f;
+
+void Start()
+{
+    InvokeRepeating("Shoot", 1f, interval);
+}
+
+void Shoot()
+{
+    Instantiate(stonePrefab, transform.position, Quaternion.identity);
+}
+
+### Stone.cs — Ball을 향해 이동 & 충돌 처리
+void Update()
+{
+    transform.position = Vector3.MoveTowards(
+        transform.position,
+        target.position,
+        speed * Time.deltaTime
+    );
+}
+
+void OnCollisionEnter(Collision col)
+{
+    if (col.gameObject.CompareTag("Player"))
+    {
+        GameManager.instance.Restart();
+    }
+}
+
